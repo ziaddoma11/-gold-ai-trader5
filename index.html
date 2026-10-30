@@ -26,6 +26,14 @@ hr{border:0;border-top:1px solid var(--line);margin:13px 0}
 <body><main>
 <div class="top"><div><div class="brand">GOLD SCALPER AI</div><div class="small">مساعد تحليل الذهب · XAUUSD · صفقات 5–30 دقيقة</div></div><div class="pill" id="feedState">جارٍ الاتصال...</div></div>
 <section class="card">
+ <h2>اختر نمط التداول</h2>
+ <div class="row">
+  <button type="button" id="fastMode" class="secondary">سريعة · 1–5 دقائق</button>
+  <button type="button" id="shortMode">قصيرة · 5–30 دقيقة</button>
+ </div>
+ <div class="small" id="modeNote" style="margin-top:9px">النمط القصير محدد. لا تعتبر اختيار المدة دليلاً على توفر بيانات شموع بهذا الإطار.</div>
+</section>
+<section class="card">
  <div class="row" style="align-items:flex-start"><div style="flex:2"><h3>سعر الذهب الفوري التقريبي (دولار/أونصة)</h3><div class="price" id="price">—</div><div class="small" id="updated">لم يتم جلب السعر بعد</div></div><div style="text-align:left"><div class="pill" id="direction">غير محدد</div><div class="small" style="margin-top:8px">تحديث تلقائي كل 15 ثانية</div></div></div>
  <div class="grid three" style="margin-top:12px"><div class="metric"><h3>اتجاه السوق</h3><b id="trend">—</b></div><div class="metric"><h3>التغير خلال اليوم</h3><b id="change">—</b></div><div class="metric"><h3>RSI 14</h3><b id="rsi">—</b></div></div>
 </section>
@@ -33,6 +41,18 @@ hr{border:0;border-top:1px solid var(--line);margin:13px 0}
  <h2>قرار التداول الحالي</h2><div class="signal wait" id="signal">انتظار البيانات</div><div class="small" id="reason">نحتاج بيانات كافية قبل تقييم الفرصة.</div>
  <hr><div class="grid"><div class="metric"><h3>الدخول المقترح</h3><b id="entry">—</b></div><div class="metric"><h3>وقف الخسارة</h3><b id="stop">—</b></div><div class="metric"><h3>الهدف الأول</h3><b id="target1">—</b></div><div class="metric"><h3>الهدف الثاني</h3><b id="target2">—</b></div></div>
  <p class="small" id="timeframe">الإطار: 5–30 دقيقة · لا تدخل قبل تأكيد شمعة الإغلاق.</p>
+</section>
+<section class="card">
+ <h2>مواصفات عقد وسيط OWMarkets · XAUUSD</h2>
+ <div class="grid three">
+  <div class="metric"><h3>حجم العقد</h3><b>100 أونصة</b></div>
+  <div class="metric"><h3>حجم الصفقة عند 0.01</h3><b>1 أونصة</b></div>
+  <div class="metric"><h3>قيمة حركة 0.01$</h3><b>$0.01</b></div>
+ </div>
+ <p class="small" style="margin-top:10px">بافتراض أن مواصفاتك صحيحة وأن XAUUSD مسعّر بالدولار: كل حركة 1.00$ في الذهب تعني ربحاً أو خسارة تقارب 1.00$ عند 0.01 لوت، قبل السبريد والعمولة والسواب.</p>
+ <div class="grid"><div><label>حركة الذهب بالدولار</label><input id="goldMove" type="number" step="0.01" value="1"></div><div><label>حجم اللوت</label><input id="goldLot" type="number" min="0.01" step="0.01" value="0.01"></div></div>
+ <div class="metric" style="margin-top:10px"><h3>ربح / خسارة قبل التكاليف</h3><b id="contractPnl">$1.00</b></div>
+ <div class="notice" style="margin-top:10px">قيمة التيك المتوقعة = 100 × 0.01 × حجم اللوت. عند 0.01 لوت تساوي $0.01 لكل تيك 0.01. الرافعة لا تغيّر الربح والخسارة؛ بل تؤثر في الهامش المطلوب. لا يمكن حساب الهامش بدقة دون معرفة الرافعة وسعر الذهب وقواعد الوسيط.</div>
 </section>
 <section class="card">
  <h2>رأس المال وإدارة المخاطر</h2>
@@ -110,6 +130,27 @@ function updateRisk(){
 function calcPnl(){let a=Number($('calcEntry').value),b=Number($('calcExit').value),q=Number($('qty').value),c=Number($('costs').value)||0;if(!a||!b||!q){$('pnl').textContent='أدخل البيانات';return}let v=(b-a)*q-c;$('pnl').textContent=(v>=0?'+$':'-$')+fmt(Math.abs(v));$('pnl').className=v>=0?'positive':'negative'}
 ['capital','risk'].forEach(id=>$(id).addEventListener('input',updateRisk));
 ['calcEntry','calcExit','qty','costs'].forEach(id=>$(id).addEventListener('input',calcPnl));
+let selectedMode='short';
+function setMode(mode){
+ selectedMode=mode;
+ $('fastMode').className=mode==='fast'?'':'secondary';
+ $('shortMode').className=mode==='short'?'':'secondary';
+ $('modeNote').textContent=mode==='fast'
+  ?'وضع 1–5 دقائق: يتطلب بيانات شموع دقيقة من وسيطك. المصدر العام الحالي لا يضمن شموعاً دقيقة، لذلك لا يعطي دخولاً مؤكداً لهذا الإطار.'
+  :'وضع 5–30 دقيقة: استخدمه للمراقبة العامة، وتأكد من شمعة MT5 قبل أي دخول.';
+ $('timeframe').textContent=mode==='fast'?'الإطار المختار: 1–5 دقائق · المصدر الحالي لا يضمن بيانات دقيقة؛ لا تعتمد على إشارة سريعة حتى نوصل تغذية MT5.':'الإطار المختار: 5–30 دقيقة · لا تدخل قبل تأكيد شمعة الإغلاق على MT5.';
+}
+$('fastMode').addEventListener('click',()=>setMode('fast'));
+$('shortMode').addEventListener('click',()=>setMode('short'));
+function calcContract(){
+ const move=Number($('goldMove').value)||0,lot=Number($('goldLot').value)||0;
+ const result=move*100*lot;
+ $('contractPnl').textContent=(result>=0?'+$':'-$')+Math.abs(result).toFixed(2);
+ $('contractPnl').className=result>=0?'positive':'negative';
+}
+$('goldMove').addEventListener('input',calcContract);
+$('goldLot').addEventListener('input',calcContract);
+setMode('short');calcContract();
 $('refresh').addEventListener('click',load);load();setInterval(load,15000);
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script></body></html>
